@@ -1,9 +1,3 @@
-import { createRequire } from "module";
-import { communityName } from "./flags.js";
-
-const require = createRequire(import.meta.url);
-const { queryGameServerInfo, queryMasterServer, REGIONS } = require("steam-server-query");
-
 const SUMMARIES_URL =
   "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/";
 
@@ -95,77 +89,11 @@ async function fetchFromWebApi(apiKey, appId) {
   return (data?.response?.servers ?? []).map(toListing);
 }
 
-async function infoFromHost(host) {
-  const info = await queryGameServerInfo(host, 2, 2500);
-  return {
-    name: String(info.name || ""),
-    steamId: info.serverId ? String(info.serverId) : "",
-    addr: info.port ? `${String(host).split(":")[0]}:${info.port}` : host,
-    players: Number(info.players || 0),
-    maxPlayers: Number(info.maxPlayers || 0),
-    map: String(info.map || ""),
-  };
-}
-
-async function fetchFromMaster(appId) {
-  const needle = process.env.STEAM_NAME_MATCH || `*${communityName()}*`;
-  const hosts = await queryMasterServer(
-    "hl2master.steampowered.com:27011",
-    REGIONS.ALL,
-    { appid: Number(appId), name_match: needle },
-    8000,
-    150
-  );
-
-  const listings = [];
-  for (const host of hosts) {
-    try {
-      listings.push(await infoFromHost(host));
-    } catch {
-      listings.push({
-        name: "",
-        steamId: "",
-        addr: host,
-        players: 0,
-        maxPlayers: 0,
-        map: "",
-      });
-    }
-  }
-  return listings;
-}
-
-export async function fetchDirectServer(addr) {
-  if (!addr) return null;
-  try {
-    return await infoFromHost(addr);
-  } catch {
-    return null;
-  }
+export async function fetchDirectServer(_addr) {
+  return null;
 }
 
 export async function fetchGameServers(apiKey, appId) {
-  const listings = [];
-  const seen = new Set();
-
-  const pushAll = (items) => {
-    for (const item of items) {
-      const key = `${item.addr}|${item.name}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      listings.push(item);
-    }
-  };
-
-  if (apiKey) {
-    pushAll(await fetchFromWebApi(apiKey, appId));
-  }
-
-  try {
-    pushAll(await fetchFromMaster(appId));
-  } catch (error) {
-    console.error("Steam master не ответил:", error.message);
-  }
-
-  return listings;
+  if (!apiKey) return [];
+  return fetchFromWebApi(apiKey, appId);
 }

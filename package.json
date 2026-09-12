@@ -1,0 +1,19 @@
+{
+  "name": "zaruba-monitoring",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Discord-бот ZARUBA: панель серверов и мониторы в статусе",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0"
+  }
+}
